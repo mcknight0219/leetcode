@@ -93,14 +93,18 @@ public class Main {
                 {'.', '.', '.', '.', '8', '.', '.', '7', '9'}
         };
         */
+        char board[][] = {
+                {'1', '1'},
+                {'1', '1'}
+        };
 
         TreeNode root = assembleTree();
 
         //ListNode head = genList(new int[]{1, 2, 3, 4});
         Solution solution = new Solution();
 
-        solution.connect(assembleLinkTree());
+        //solution.connect(assembleLinkTree());
 
-        System.out.println();
+        System.out.println(solution.maximalRectangle(board));
     }
 }

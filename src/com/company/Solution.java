@@ -1,5 +1,7 @@
 package com.company;
 
+import sun.reflect.generics.tree.Tree;
+
 import java.util.*;
 
 
@@ -2345,10 +2347,170 @@ public class Solution {
         return Integer.MAX_VALUE;
     }
 
-
+    static final TreeLinkNode EMPTY_NODE = new TreeLinkNode(Integer.MAX_VALUE);
+    /**
+     * Connect tree node to its immediate cousin
+     * The algorithm is intuitive but uses O(2^(N-1))
+     *
+     * @param root
+     */
     public void connect(TreeLinkNode root)
     {
-       
+        // trivia cases
+        if( root == null || root.left == null || root.right == null )
+            return;
+
+        Deque<TreeLinkNode> nodes = new ArrayDeque<TreeLinkNode>();
+        nodes.push(root);
+        nodes.add(EMPTY_NODE);
+
+        while( !nodes.isEmpty() ) {
+            TreeLinkNode curr = nodes.peek();
+            if( curr == EMPTY_NODE ) {
+                nodes.pop();
+                continue;
+            }
+
+            if( curr.left != null )
+                nodes.add(curr.left);
+            if( curr.right != null )
+                nodes.add(curr.right);
+
+            nodes.pop();
+            TreeLinkNode next = nodes.peek();
+            // curr is the last element on current level
+            if( next == EMPTY_NODE ) {
+                curr.next = null;
+                // add a placeholder on end of next level
+                nodes.add(EMPTY_NODE);
+            } else {
+                curr.next = next;
+            }
+        }
+    }
+
+    /**
+     * Connect tree node to its immediate cousin.
+     * Use constant extra space. This means level
+     * traversing isn't applicable
+     *
+     * @param root
+     */
+    public void connect_v2(TreeLinkNode root)
+    {
+        
+    }
+
+    /**
+     */
+    public List<List<Integer>> generate(int numRows) 
+    {
+        List<Integer> r1 = Arrays.asList(new Integer[]{1});
+        List<Integer> r2 = Arrays.asList(new Integer[]{1, 1});
+
+        List<List<Integer>> rows = new ArrayList<List<Integer>>();
+        rows.add(r1);
+        rows.add(r2);
+
+        if( numRows <= 2 ) {
+            return rows.subList(0, numRows);
+        }
+
+        for( int i = 2; i < numRows; ++i ) {
+            List<Integer> prev = rows.get(rows.size()-1);
+            List<Integer> curr = new ArrayList<Integer>(prev.size()+1);
+            curr.add(1);
+            for( int j = 0; j < prev.size() - 1; ++j ) {
+                curr.add(prev.get(j) + prev.get(j+1));
+            }
+            curr.add(1);
+            rows.add(curr);
+        }
+
+        return rows;
+    }
+
+    /**
+     * Find the area of largest rectangle. Seems like
+     * a two dimensional DP.
+     */
+    public int maximalRectangle(char[][] matrix) 
+    {
+        int h = matrix.length;
+        int w = matrix[0].length;
+        int[][] area = new int[h][w];
+        // holds top left/bottom right coordinates for the cell
+        int[][][] info = new int[h][w][4];
+
+        for( int i = 0; i < h; ++i ) {
+            for( int j =0; j < w; ++j ) {
+                if( i + j == 0 ) {
+                    area[0][0] = matrix[i][j] == '1' ? 1 : 0;
+                    info[0][0] = new int[]{0, 0, 0, 0};
+                    continue;
+                }
+                // no contribution 
+                if( matrix[i][j] == '0' ) {
+                    if( j == 0 ) {
+                        area[i][j] = area[i-1][j];
+                        info[i][j] = info[i-1][j];
+                    } else if( i == 0 ) {
+                        area[i][j] = area[i][j-1];
+                        info[i][j] = info[i][j-1];
+                    } else {
+                        if( area[i-1][j] >= area[i][j-1] ) {
+                            area[i][j] = area[i-1][j];
+                            info[i][j] = info[i-1][j];
+                        } else {
+                            area[i][j] = area[i][j-1];
+                            info[i][j] = info[i][j-1];
+                        }
+                    }
+                }  else {
+                    if( j == 0 ) {
+                        // check maximal so far is adjacent
+                        if( info[i-1][j][2] == i-1) {
+                            area[i][j] = area[i-1][j] + 1;
+                            info[i][j] = info[i-1][j];
+                            info[i][j][2] = i;
+                            info[i][j][3] = j;
+                        }
+                    } else if( i == 0 ) {
+                        if( info[i][j-1][3] == j-1 ) {
+                            area[i][j] = area[i][j-1] + 1;
+                            info[i][j] = info[i][j-1];
+                            info[i][j][2] = i;
+                            info[i][j][3] = j;
+                        }
+                    } else {            
+                        if( info[i-1][j-1][2] == i-1 || info[i-1][j-1][3] == j-1 ) {
+                            // grow to left and upward
+                            int l = j;
+                            while( l >= info[i-1][j-1][1] && matrix[i][l] != '0' ) {
+                                l--;
+                            }
+                            int u = i;
+                            while( u >= info[i-1][j-1][0] && matrix[u][j] != '0' ) {
+                                u--;
+                            }
+                            int a = (i - u) * (j - l);
+                            if( a > area[i-1][j-1] ) {
+                                area[i][j] = a;
+                                info[i][j][0] = u + 1;
+                                info[i][j][1] = l + 1;
+                                info[i][j][2] = i;
+                                info[i][j][3] = j;
+                            } else {
+                                area[i][j] = area[i-1][j-1];
+                                info[i][j] = info[i-1][j-1];
+                            }
+                        } 
+                    }
+                }   
+            }
+        }
+
+        return area[h-1][w-1]; 
     }
 }
 
