@@ -2449,7 +2449,7 @@ public class Solution {
 
     /**
      * Find the area of largest rectangle. Seems like
-     * a two dimensional DP.
+     * a two dimensional DP. This code is too buggy
      */
     public int maximalRectangle(char[][] matrix) 
     {
@@ -2475,12 +2475,15 @@ public class Solution {
                         area[i][j] = area[i][j-1];
                         info[i][j] = info[i][j-1];
                     } else {
-                        if( area[i-1][j] >= area[i][j-1] ) {
+                        if( area[i-1][j] > area[i][j-1] && area[i-1][j] > area[i-1][j-1]) {
                             area[i][j] = area[i-1][j];
                             info[i][j] = info[i-1][j];
-                        } else {
+                        } else if( area[i][j-1] > area[i-1][j] && area[i][j-1] > area[i-1][j-1]) {
                             area[i][j] = area[i][j-1];
                             info[i][j] = info[i][j-1];
+                        } else {
+                            area[i][j] = area[i-1][j-1];
+                            info[i][j] = info[i-1][j-1];
                         }
                     }
                 }  else {
@@ -2497,9 +2500,9 @@ public class Solution {
                                 u--;
                             }
                             int a = i - u;
-                            if( a > area[i-1][0] ) {
+                            if( a >= area[i-1][0] ) {
                                 area[i][j] = a;
-                                info[i][j][0] = u + 1;
+                                info[i][j][0] = u;
                                 info[i][j][1] = 0;
                                 info[i][j][2] = i;
                                 info[i][j][3] = 0;
@@ -2521,7 +2524,7 @@ public class Solution {
                                 l--;
                             }
                             int a = j - l;
-                            if( a > area[0][j-1] ) {
+                            if( a >= area[0][j-1] ) {
                                 area[i][j] = a;
                                 info[i][j][0] = 0;
                                 info[i][j][1] = l+1;
@@ -2533,37 +2536,63 @@ public class Solution {
                             }
                         }
                     } else {
-                        int l = j;
-                        while( l >= 0 && matrix[i][l] != '0' ) {
-                            l--;
+
+                        int a = 0;
+                        if( info[i-1][j][2] == i-1 && info[i-1][j][3] == j ) {
+                            // see how far we can expand to left
+                            int l = j;
+                            while ( l >= info[i-1][j][1] && matrix[i][l] == '1' ) {
+                                l--;
+                            }
+                            area[i][j] = (j - l) * (i - info[i-1][j][0] + 1);
+                            info[i][j] = new int[]{info[i-1][j][0], l+1, i, j};
+
                         }
-                        int u = i;
-                        while( u >= 0 && matrix[u][j] != '0' ) {
-                            u--;
+                        if( info[i][j-1][2] == i && info[i][j-1][3] == j-1 ) {
+                            // see how far we can expand upward
+                            int u = i;
+                            while( u >= info[i][j-1][0] && matrix[u][j] == '1' ) {
+                                u--;
+                            }
+                            a = (i-u) * (j - info[i][j-1][1]+1);
+                            if( a >= area[i][j] ) {
+                                area[i][j] = a;
+                                info[i][j] = new int[]{u+1, info[i][j-1][1], i, j};
+                            }
                         }
-                        int a = (i - u) * (j - l);
+                        if( info[i-1][j-1][2] == i-1 && info[i-1][j-1][3] == j-1 ) {
+                            int l = j, u = i;
+                            while( l >= info[i-1][j-1][1] && matrix[i][l] == '1') {
+                                l--;
+                            }
+                            while( u >= info[i-1][j-1][0] && matrix[u][j] == '1' ) {
+                                u--;
+                            }
+                            a = (i - u) * (j - l);
+                            if( a >= area[i][j] ) {
+                                area[i][j] = a;
+                                info[i][j] = new int[]{u+1, l+1, i, j};
+                            }
+                        }
+
+
+
                         int   maxArea = Integer.MIN_VALUE;
                         int[] maxInfo = new int[4];
-                        if( area[i][j-1] > maxArea ) {
+                        if( area[i][j-1] >= maxArea ) {
                             maxArea = area[i][j-1];
                             maxInfo = info[i][j-1];
                         }
-                        if( area[i-1][j-1] > maxArea ) {
+                        if( area[i-1][j-1] >= maxArea ) {
                             maxArea = area[i-1][j-1];
                             maxInfo = info[i-1][j-1];
                         }
-                        if( area[i-1][j] > maxArea ) {
+                        if( area[i-1][j] >= maxArea ) {
                             maxArea = area[i-1][j];
                             maxInfo = info[i-1][j];
                         }
 
-                        if( a > maxArea ) {
-                            area[i][j] = a;
-                            info[i][j][0] = u + 1;
-                            info[i][j][1] = l + 1;
-                            info[i][j][2] = i;
-                            info[i][j][3] = j;
-                        } else {
+                        if( area[i][j] < maxArea ) {
                             area[i][j] = maxArea;
                             info[i][j] = maxInfo;
                         }
