@@ -94,8 +94,9 @@ public class Main {
         };
         */
         char board[][] = {
-                {'1', '1'},
-                {'1', '1'}
+                {'1', '1', '0', '1'},
+                {'1', '1', '0', '1'},
+                {'1', '1', '1', '1'}
         };
 
         TreeNode root = assembleTree();
